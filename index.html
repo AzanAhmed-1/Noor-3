@@ -16,20 +16,22 @@ body {
 
 .hidden { display: none; }
 
-/* Admin */
+/* ADMIN PANEL */
 #admin {
     background: white;
     padding: 25px;
-    border-radius: 12px;
-    max-width: 750px;
+    border-radius: 14px;
+    max-width: 800px;
     margin: 30px auto;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.2);
 }
 
 textarea {
     width: 100%;
-    height: 150px;
+    height: 160px;
     padding: 12px;
     font-family: Georgia, serif;
+    font-size: 15px;
 }
 
 button {
@@ -42,7 +44,11 @@ button {
     cursor: pointer;
 }
 
-/* Envelope */
+ul {
+    text-align: left;
+}
+
+/* ENVELOPE */
 .envelope {
     width: 340px;
     height: 220px;
@@ -65,7 +71,7 @@ button {
     font-weight: bold;
 }
 
-/* Letter */
+/* LETTER */
 .letter {
     display: none;
     background: white;
@@ -74,12 +80,22 @@ button {
     max-width: 750px;
     margin: 40px auto;
     text-align: left;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.35);
 }
 
-p { white-space: pre-line; line-height: 1.7; }
+h2 {
+    text-align: center;
+    color: #ff5e7e;
+}
+
+p {
+    white-space: pre-line;
+    line-height: 1.7;
+    font-size: 16px;
+}
 
 .signature {
-    margin-top: 30px;
+    margin-top: 40px;
     text-align: right;
     font-style: italic;
 }
@@ -88,12 +104,13 @@ p { white-space: pre-line; line-height: 1.7; }
 
 <body>
 
-<!-- ADMIN MODE (YOU ONLY) -->
+<!-- ADMIN MODE -->
 <div id="admin" class="hidden">
-    <h3>Write a Letter</h3>
-    <textarea id="newLetter"></textarea>
+    <h3>Write & Store Letters</h3>
+    <textarea id="newLetter" placeholder="Write your letter here..."></textarea>
     <br>
     <button onclick="saveLetter()">Save Letter</button>
+
     <h4>Saved Letters</h4>
     <ul id="lettersList"></ul>
 </div>
@@ -107,25 +124,83 @@ p { white-space: pre-line; line-height: 1.7; }
     <h2>For Noor-UL-Ain ❤️</h2>
     <p id="letterText"></p>
     <div class="signature">
-        — Azan Ahmed<br>15 December 2025
+        — Azan Ahmed<br>
+        15 December 2025
     </div>
 </div>
 
 <script>
-// 🔑 ADMIN ACCESS (secret)
-if (location.hash === "#admin") {
-    document.getElementById("admin").classList.remove("hidden");
-    document.getElementById("envelope").classList.add("hidden");
-    loadLetters();
-}
+document.addEventListener("DOMContentLoaded", () => {
 
+    const adminPanel = document.getElementById("admin");
+    const envelope = document.getElementById("envelope");
+    const letter = document.getElementById("letter");
+    const letterText = document.getElementById("letterText");
+
+    // =====================
+    // ADMIN MODE
+    // =====================
+    if (window.location.hash === "#admin") {
+        adminPanel.classList.remove("hidden");
+        envelope.style.display = "none";
+        letter.style.display = "none";
+        loadLetters();
+        return;
+    }
+
+    // =====================
+    // PUBLIC MODE (FINAL LETTER)
+    // =====================
+    const FINAL_LETTER = `My Noor,
+
+Hiii  
+You know I have been thinking of writing letters and like give you a shit ton of those when you come to GIKI  
+But yes I’m lazy as hell and I wanted to write something abhi  
+I have zero things to tell you because I tell you all my thoughts as I’m thinking but yes  
+
+I really love you Noor-UL-Ain  
+You’re literally the most perfect girlfriend  
+You’re the perfect mix  
+
+And I love the fact that you don’t say no to my dumb ahh requests unless it’s just really outrageous and it’s justified tbh  
+
+I really love you  
+All my thoughts have you in them  
+Unless I’m thinking about all the quizzes I have to prepare for, you  
+
+You’re a really fun person to talk to  
+I really like the fact that we met no matter how it happened or what we had to go through to get here  
+I’m just happy I got you in the end  
+It was the best possible outcome  
+
+I would ask you out every day if I could only to see a part of the actual smile if not the entire smile you had the moment I asked you to date me  
+
+To end this one, I just wanna say I love you to the moon and back  
+
+And…  
+
+Jaan-e-man                     Jaan-e-Jahan  
+Tum sabse haseen          Tum sabse jahan`;
+
+    letterText.innerText = FINAL_LETTER;
+
+    envelope.addEventListener("click", () => {
+        envelope.style.display = "none";
+        letter.style.display = "block";
+    });
+});
+
+// =====================
+// STORAGE FUNCTIONS
+// =====================
 function saveLetter() {
     const text = document.getElementById("newLetter").value.trim();
-    if (!text) return alert("Write something");
+    if (!text) return alert("Write something first");
 
     const letters = JSON.parse(localStorage.getItem("letters") || "[]");
     letters.push({ text, date: new Date().toLocaleDateString() });
     localStorage.setItem("letters", JSON.stringify(letters));
+
     document.getElementById("newLetter").value = "";
     loadLetters();
 }
@@ -133,7 +208,9 @@ function saveLetter() {
 function loadLetters() {
     const list = document.getElementById("lettersList");
     list.innerHTML = "";
+
     const letters = JSON.parse(localStorage.getItem("letters") || "[]");
+
     letters.forEach((l, i) => {
         const li = document.createElement("li");
         li.innerHTML = `<a href="#" onclick="openSaved(${i})">${l.date}</a>`;
@@ -142,22 +219,11 @@ function loadLetters() {
 }
 
 function openSaved(i) {
-    const letters = JSON.parse(localStorage.getItem("letters"));
+    const letters = JSON.parse(localStorage.getItem("letters") || "[]");
     document.getElementById("letterText").innerText = letters[i].text;
     document.getElementById("admin").classList.add("hidden");
     document.getElementById("letter").style.display = "block";
 }
-
-// PUBLIC LETTER
-const FINAL_LETTER = `My Noor,
-
-(This is your final sealed letter ❤️)`;
-
-document.getElementById("letterText").innerText = FINAL_LETTER;
-document.getElementById("envelope").onclick = () => {
-    document.getElementById("envelope").style.display = "none";
-    document.getElementById("letter").style.display = "block";
-};
 </script>
 
 </body>
