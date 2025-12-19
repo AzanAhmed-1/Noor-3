@@ -182,20 +182,29 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-    // =====================
-    // PUBLIC MODE (LATEST LETTER)
-    // =====================
+   // =====================
+// PUBLIC MODE (LATEST LETTER)
+// =====================
+letterText.innerText = "Loading your letter… ❤️";
+
+try {
     const q = query(lettersRef, orderBy("created", "desc"), limit(1));
     const snapshot = await getDocs(q);
 
-    snapshot.forEach(doc => {
-        letterText.innerText = doc.data().text;
-    });
+    if (!snapshot.empty) {
+        snapshot.forEach(doc => {
+            letterText.innerText = doc.data().text;
+        });
+    } else {
+        letterText.innerText = "A letter is coming soon ❤️";
+    }
+} catch (e) {
+    letterText.innerText = "Unable to load letter right now ❤️";
+}
 
-    envelope.addEventListener("click", () => {
-        envelope.style.display = "none";
-        letter.style.display = "block";
-    });
+envelope.addEventListener("click", () => {
+    envelope.style.display = "none";
+    letter.style.display = "block";
 });
 
 // =====================
@@ -232,3 +241,4 @@ async function loadLetters() {
 
 </body>
 </html>
+
