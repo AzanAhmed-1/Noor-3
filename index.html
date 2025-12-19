@@ -128,6 +128,17 @@ p {
         15 December 2025
     </div>
 </div>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const envelope = document.getElementById("envelope");
+    const letter = document.getElementById("letter");
+
+    envelope.addEventListener("click", () => {
+        envelope.style.display = "none";
+        letter.style.display = "block";
+    });
+});
+</script>
 
 <!-- 🔥 FIREBASE + LOGIC -->
 <script type="module">
@@ -241,4 +252,5 @@ async function loadLetters() {
 
 </body>
 </html>
+
 
