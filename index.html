@@ -128,6 +128,8 @@ p {
         15 December 2025
     </div>
 </div>
+
+<!-- ✅ UI LOGIC (ALWAYS WORKS) -->
 <script>
 document.addEventListener("DOMContentLoaded", () => {
     const envelope = document.getElementById("envelope");
@@ -140,7 +142,7 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
-<!-- 🔥 FIREBASE + LOGIC -->
+<!-- 🔥 FIREBASE + DATA -->
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import {
@@ -154,23 +156,16 @@ import {
     serverTimestamp
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-/* 🔥 REPLACE WITH YOUR FIREBASE CONFIG 🔥 */
-// Import the functions you need from the SDKs you need
-import { initializeApp } from "firebase/app";
-// TODO: Add SDKs for Firebase products that you want to use
-// https://firebase.google.com/docs/web/setup#available-libraries
-
-// Your web app's Firebase configuration
+/* 🔥 YOUR FIREBASE CONFIG */
 const firebaseConfig = {
   apiKey: "AIzaSyAcnkbwI7FSYINPoTFkKPHh5qVN6okHrrI",
   authDomain: "noor-3-9c64a.firebaseapp.com",
   projectId: "noor-3-9c64a",
-  storageBucket: "noor-3-9c64a.firebasestorage.app",
+  storageBucket: "noor-3-9c64a.appspot.com",
   messagingSenderId: "883642246934",
   appId: "1:883642246934:web:e9f76efb03016093765237"
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const lettersRef = collection(db, "letters");
@@ -182,9 +177,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     const letter = document.getElementById("letter");
     const letterText = document.getElementById("letterText");
 
-    // =====================
     // ADMIN MODE
-    // =====================
     if (window.location.hash === "#admin") {
         adminPanel.classList.remove("hidden");
         envelope.style.display = "none";
@@ -193,34 +186,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
     }
 
-   // =====================
-// PUBLIC MODE (LATEST LETTER)
-// =====================
-letterText.innerText = "Loading your letter… ❤️";
+    // PUBLIC MODE
+    letterText.innerText = "Loading your letter… ❤️";
 
-try {
-    const q = query(lettersRef, orderBy("created", "desc"), limit(1));
-    const snapshot = await getDocs(q);
+    try {
+        const q = query(lettersRef, orderBy("created", "desc"), limit(1));
+        const snapshot = await getDocs(q);
 
-    if (!snapshot.empty) {
-        snapshot.forEach(doc => {
-            letterText.innerText = doc.data().text;
-        });
-    } else {
-        letterText.innerText = "A letter is coming soon ❤️";
+        if (!snapshot.empty) {
+            snapshot.forEach(doc => {
+                letterText.innerText = doc.data().text;
+            });
+        } else {
+            letterText.innerText = "A letter is coming soon ❤️";
+        }
+    } catch {
+        letterText.innerText = "Unable to load letter right now ❤️";
     }
-} catch (e) {
-    letterText.innerText = "Unable to load letter right now ❤️";
-}
-
-envelope.addEventListener("click", () => {
-    envelope.style.display = "none";
-    letter.style.display = "block";
 });
 
-// =====================
-// STORAGE FUNCTIONS
-// =====================
+// SAVE LETTER
 window.saveLetter = async function () {
     const text = document.getElementById("newLetter").value.trim();
     if (!text) return alert("Write something first");
@@ -252,5 +237,3 @@ async function loadLetters() {
 
 </body>
 </html>
-
-
