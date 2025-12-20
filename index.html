@@ -41,6 +41,7 @@ textarea {
     margin-top: 10px;
     padding: 10px;
     box-sizing: border-box;
+    font-family: inherit;
 }
 button {
     background: #ff5e7e;
@@ -50,6 +51,7 @@ button {
     border-radius: 20px;
     margin-top: 10px;
     cursor: pointer;
+    font-weight: bold;
 }
 
 /* ENVELOPE */
@@ -87,8 +89,8 @@ button {
     animation: bounce 2s infinite;
 }
 
-/* LETTER */
-.letter {
+/* LETTER CONTAINER */
+.letter-container {
     background: white;
     padding: 30px;
     border-radius: 14px;
@@ -99,10 +101,33 @@ button {
     line-height: 1.8;
     color: #333;
     width: 90%;
+    margin-bottom: 40px;
 }
 
-h2 { text-align: center; color: #ff5e7e; margin-top: 0; }
-.signature { margin-top: 40px; text-align: right; font-style: italic; color: #555; }
+h2 { text-align: center; color: #ff5e7e; margin-top: 0; margin-bottom: 30px; }
+
+/* INDIVIDUAL LETTER ENTRY */
+.letter-entry {
+    border-bottom: 2px dashed #ffcad4;
+    padding-bottom: 20px;
+    margin-bottom: 30px;
+}
+.letter-entry:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+}
+
+.letter-text {
+    white-space: pre-wrap; /* Keeps your paragraphs */
+}
+
+.signature {
+    margin-top: 20px;
+    text-align: right;
+    font-style: italic;
+    color: #777;
+    font-size: 0.9em;
+}
 
 /* ANIMATION */
 @keyframes bounce {
@@ -116,10 +141,10 @@ h2 { text-align: center; color: #ff5e7e; margin-top: 0; }
 
 <div id="admin" class="hidden">
     <h3>💌 Write a New Letter</h3>
-    <textarea id="adminText" placeholder="Write your heart out..."></textarea>
+    <textarea id="adminText" placeholder="Write your heart out here..."></textarea>
     <br>
-    <button onclick="saveLetter()">Save to Database</button>
-    <p id="status" style="font-size:12px; color:gray;"></p>
+    <button onclick="saveLetter()">Save to Diary</button>
+    <p id="status" style="font-size:12px; color:gray; margin-top:10px;"></p>
 </div>
 
 <div class="envelope" id="envelope" onclick="openLetter()">
@@ -127,18 +152,11 @@ h2 { text-align: center; color: #ff5e7e; margin-top: 0; }
 </div>
 <div class="click-hint" id="hint">Tap to open</div>
 
-<div class="letter hidden" id="letterView">
-    <h2>For Noor-UL-Ain ❤️</h2>
-    <p id="letterContent">Loading...</p>
-    
-    <div class="signature">
-        — Azan Ahmed<br>
-        <span id="letterDate"></span>
+<div class="letter-container hidden" id="letterView">
     </div>
-</div>
 
 <script>
-// 2. FIREBASE CONFIGURATION
+// 1. FIREBASE CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyAcnkbwI7FSYINPoTFkKPHh5qVN6okHrrI",
   authDomain: "noor-3-9c64a.firebaseapp.com",
@@ -148,13 +166,12 @@ const firebaseConfig = {
   appId: "1:883642246934:web:e9f76efb03016093765237"
 };
 
-// Initialize Firebase (Compat Mode)
+// Initialize Firebase
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 3. PAGE LOGIC
+// 2. CHECK FOR ADMIN MODE
 window.onload = function() {
-    // Show Admin Panel if URL has #admin
     if (window.location.hash === "#admin") {
         document.getElementById("admin").classList.remove("hidden");
         document.getElementById("envelope").style.display = "none";
@@ -162,55 +179,75 @@ window.onload = function() {
     }
 };
 
-// FUNCTION: Open Envelope & Fetch Latest Letter
+// 3. FETCH & DISPLAY ALL LETTERS
 function openLetter() {
     const envelope = document.getElementById("envelope");
     const hint = document.getElementById("hint");
     const letterView = document.getElementById("letterView");
-    const content = document.getElementById("letterContent");
-    const dateSpan = document.getElementById("letterDate");
 
-    // UI Animation
+    // Hide envelope, show letter container
     envelope.style.display = "none";
     hint.style.display = "none";
     letterView.classList.remove("hidden");
 
-    // Fetch from Database
+    // Add Header
+    letterView.innerHTML = "<h2>For Noor-UL-Ain ❤️</h2>";
+    letterView.innerHTML += "<p style='text-align:center; color:gray;'>Loading memories...</p>";
+
+    // Fetch from Firebase
     db.collection("letters")
-      .orderBy("timestamp", "desc") // Get the newest one
-      .limit(1)
+      .orderBy("timestamp", "desc") // Newest first
       .get()
       .then((querySnapshot) => {
+          // Clear "Loading..."
+          letterView.innerHTML = "<h2>For Noor-UL-Ain ❤️</h2>";
+
           if (!querySnapshot.empty) {
-              const doc = querySnapshot.docs[0];
-              const data = doc.data();
-              
-              // Set Text
-              content.innerText = data.text;
-              
-              // Set Date (Formatted)
-              if (data.timestamp) {
-                  const date = data.timestamp.toDate();
-                  dateSpan.innerText = date.toLocaleDateString("en-US", { 
-                      year: 'numeric', month: 'long', day: 'numeric' 
-                  });
-              }
+              querySnapshot.forEach((doc) => {
+                  const data = doc.data();
+                  
+                  // Format Date
+                  let dateString = "Unknown Date";
+                  if (data.timestamp) {
+                      const date = data.timestamp.toDate();
+                      dateString = date.toLocaleDateString("en-US", { 
+                          year: 'numeric', month: 'long', day: 'numeric' 
+                      });
+                  }
+
+                  // Create HTML for this letter
+                  const letterHTML = `
+                    <div class="letter-entry">
+                        <div class="letter-text">${data.text}</div>
+                        <div class="signature">
+                            — Azan Ahmed<br>
+                            <span>${dateString}</span>
+                        </div>
+                    </div>
+                  `;
+                  
+                  // Add to page
+                  letterView.innerHTML += letterHTML;
+              });
           } else {
-              content.innerText = "No letters found yet. Check back soon! ❤️";
+              letterView.innerHTML += "<p style='text-align:center'>No letters found yet. ❤️</p>";
           }
       })
       .catch((error) => {
-          console.error("Error loading letter:", error);
-          content.innerText = "My love, the internet is weak right now, but know that I love you! ❤️ (Error loading)";
+          console.error("Error:", error);
+          letterView.innerHTML += "<p style='text-align:center; color:red'>Error loading letters. Please refresh. ❤️</p>";
       });
 }
 
-// FUNCTION: Save Letter (Admin Only)
+// 4. SAVE A NEW LETTER (ADMIN)
 function saveLetter() {
     const text = document.getElementById("adminText").value;
     const status = document.getElementById("status");
 
-    if (!text) return;
+    if (!text) {
+        alert("Please write something first!");
+        return;
+    }
 
     status.innerText = "Saving...";
 
