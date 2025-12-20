@@ -2,161 +2,143 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>For Noor-UL-Ain ❤️</title>
 
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore-compat.js"></script>
+
 <style>
+/* GENERAL STYLES */
 body {
     margin: 0;
-    padding: 40px;
-    font-family: Georgia, serif;
+    padding: 20px;
+    font-family: 'Georgia', serif;
     background: linear-gradient(to right, #fdeff9, #ec38bc);
     text-align: center;
     min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
 }
 
-.hidden { display: none; }
+.hidden { display: none !important; }
 
 /* ADMIN PANEL */
 #admin {
     background: white;
-    padding: 25px;
-    border-radius: 14px;
-    max-width: 800px;
-    margin: 30px auto;
+    padding: 20px;
+    border-radius: 10px;
+    width: 90%;
+    max-width: 500px;
+    margin-bottom: 20px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+    z-index: 1000;
 }
-
 textarea {
     width: 100%;
-    height: 160px;
-    padding: 12px;
-    font-family: Georgia, serif;
-    font-size: 15px;
-}
-
-button {
+    height: 120px;
     margin-top: 10px;
-    padding: 10px 25px;
-    border: none;
+    padding: 10px;
+    box-sizing: border-box;
+}
+button {
     background: #ff5e7e;
     color: white;
+    border: none;
+    padding: 10px 20px;
     border-radius: 20px;
+    margin-top: 10px;
     cursor: pointer;
-}
-
-ul {
-    text-align: left;
 }
 
 /* ENVELOPE */
 .envelope {
-    width: 340px;
-    height: 220px;
+    width: 100%;
+    max-width: 320px;
+    height: 200px;
     background: white;
-    margin: 120px auto;
+    margin-top: 80px;
     border-radius: 10px;
     position: relative;
     cursor: pointer;
     box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+    transition: transform 0.3s;
 }
+.envelope:hover { transform: scale(1.05); }
 
 .stamp {
     position: absolute;
-    top: 18px;
-    right: 18px;
+    top: 15px;
+    right: 15px;
     border: 2px dashed #ff5e7e;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 5px 10px;
+    font-size: 12px;
     color: #ff5e7e;
     font-weight: bold;
+    transform: rotate(15deg);
+}
+
+.click-hint {
+    margin-top: 20px;
+    color: white;
+    font-size: 14px;
+    opacity: 0.8;
+    animation: bounce 2s infinite;
 }
 
 /* LETTER */
 .letter {
-    display: none;
     background: white;
-    padding: 35px;
+    padding: 30px;
     border-radius: 14px;
-    max-width: 750px;
-    margin: 40px auto;
+    max-width: 600px;
+    margin-top: 40px;
     text-align: left;
     box-shadow: 0 18px 40px rgba(0,0,0,0.35);
+    line-height: 1.8;
+    color: #333;
+    width: 90%;
 }
 
-h2 {
-    text-align: center;
-    color: #ff5e7e;
-}
+h2 { text-align: center; color: #ff5e7e; margin-top: 0; }
+.signature { margin-top: 40px; text-align: right; font-style: italic; color: #555; }
 
-p {
-    white-space: pre-line;
-    line-height: 1.7;
-    font-size: 16px;
-}
-
-.signature {
-    margin-top: 40px;
-    text-align: right;
-    font-style: italic;
+/* ANIMATION */
+@keyframes bounce {
+    0%, 100% {transform: translateY(0);}
+    50% {transform: translateY(-5px);}
 }
 </style>
 </head>
 
 <body>
 
-<!-- ADMIN MODE -->
 <div id="admin" class="hidden">
-    <h3>Write & Store Letters</h3>
-    <textarea id="newLetter" placeholder="Write your letter here..."></textarea>
+    <h3>💌 Write a New Letter</h3>
+    <textarea id="adminText" placeholder="Write your heart out..."></textarea>
     <br>
-    <button onclick="saveLetter()">Save Letter</button>
-
-    <h4>Saved Letters</h4>
-    <ul id="lettersList"></ul>
+    <button onclick="saveLetter()">Save to Database</button>
+    <p id="status" style="font-size:12px; color:gray;"></p>
 </div>
 
-<!-- PUBLIC VIEW -->
-<div class="envelope" id="envelope">
-    <div class="stamp">To Noor-UL-Ain</div>
+<div class="envelope" id="envelope" onclick="openLetter()">
+    <div class="stamp">For You</div>
 </div>
+<div class="click-hint" id="hint">Tap to open</div>
 
-<div class="letter" id="letter">
+<div class="letter hidden" id="letterView">
     <h2>For Noor-UL-Ain ❤️</h2>
-    <p id="letterText"></p>
+    <p id="letterContent">Loading...</p>
+    
     <div class="signature">
         — Azan Ahmed<br>
-        15 December 2025
+        <span id="letterDate"></span>
     </div>
 </div>
 
-<!-- ✅ UI LOGIC (ALWAYS WORKS) -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const envelope = document.getElementById("envelope");
-    const letter = document.getElementById("letter");
-
-    envelope.addEventListener("click", () => {
-        envelope.style.display = "none";
-        letter.style.display = "block";
-    });
-});
-</script>
-
-<!-- 🔥 FIREBASE + DATA -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import {
-    getFirestore,
-    collection,
-    addDoc,
-    getDocs,
-    query,
-    orderBy,
-    limit,
-    serverTimestamp
-} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-/* 🔥 YOUR FIREBASE CONFIG */
+// 2. FIREBASE CONFIGURATION
 const firebaseConfig = {
   apiKey: "AIzaSyAcnkbwI7FSYINPoTFkKPHh5qVN6okHrrI",
   authDomain: "noor-3-9c64a.firebaseapp.com",
@@ -166,71 +148,82 @@ const firebaseConfig = {
   appId: "1:883642246934:web:e9f76efb03016093765237"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const lettersRef = collection(db, "letters");
+// Initialize Firebase (Compat Mode)
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 
-document.addEventListener("DOMContentLoaded", async () => {
-
-    const adminPanel = document.getElementById("admin");
-    const envelope = document.getElementById("envelope");
-    const letter = document.getElementById("letter");
-    const letterText = document.getElementById("letterText");
-
-    // ADMIN MODE
+// 3. PAGE LOGIC
+window.onload = function() {
+    // Show Admin Panel if URL has #admin
     if (window.location.hash === "#admin") {
-        adminPanel.classList.remove("hidden");
-        envelope.style.display = "none";
-        letter.style.display = "none";
-        loadLetters();
-        return;
+        document.getElementById("admin").classList.remove("hidden");
+        document.getElementById("envelope").style.display = "none";
+        document.getElementById("hint").style.display = "none";
     }
-
-    // PUBLIC MODE
-    letterText.innerText = "Loading your letter… ❤️";
-
-    try {
-        const q = query(lettersRef, orderBy("created", "desc"), limit(1));
-        const snapshot = await getDocs(q);
-
-        if (!snapshot.empty) {
-            snapshot.forEach(doc => {
-                letterText.innerText = doc.data().text;
-            });
-        } else {
-            letterText.innerText = "A letter is coming soon ❤️";
-        }
-    } catch {
-        letterText.innerText = "Unable to load letter right now ❤️";
-    }
-});
-
-// SAVE LETTER
-window.saveLetter = async function () {
-    const text = document.getElementById("newLetter").value.trim();
-    if (!text) return alert("Write something first");
-
-    await addDoc(lettersRef, {
-        text,
-        created: serverTimestamp()
-    });
-
-    document.getElementById("newLetter").value = "";
-    loadLetters();
 };
 
-async function loadLetters() {
-    const list = document.getElementById("lettersList");
-    list.innerHTML = "";
+// FUNCTION: Open Envelope & Fetch Latest Letter
+function openLetter() {
+    const envelope = document.getElementById("envelope");
+    const hint = document.getElementById("hint");
+    const letterView = document.getElementById("letterView");
+    const content = document.getElementById("letterContent");
+    const dateSpan = document.getElementById("letterDate");
 
-    const q = query(lettersRef, orderBy("created", "desc"));
-    const snapshot = await getDocs(q);
+    // UI Animation
+    envelope.style.display = "none";
+    hint.style.display = "none";
+    letterView.classList.remove("hidden");
 
-    snapshot.forEach(doc => {
-        const li = document.createElement("li");
-        const d = doc.data().created?.toDate();
-        li.innerText = d ? d.toDateString() : "Saved letter";
-        list.appendChild(li);
+    // Fetch from Database
+    db.collection("letters")
+      .orderBy("timestamp", "desc") // Get the newest one
+      .limit(1)
+      .get()
+      .then((querySnapshot) => {
+          if (!querySnapshot.empty) {
+              const doc = querySnapshot.docs[0];
+              const data = doc.data();
+              
+              // Set Text
+              content.innerText = data.text;
+              
+              // Set Date (Formatted)
+              if (data.timestamp) {
+                  const date = data.timestamp.toDate();
+                  dateSpan.innerText = date.toLocaleDateString("en-US", { 
+                      year: 'numeric', month: 'long', day: 'numeric' 
+                  });
+              }
+          } else {
+              content.innerText = "No letters found yet. Check back soon! ❤️";
+          }
+      })
+      .catch((error) => {
+          console.error("Error loading letter:", error);
+          content.innerText = "My love, the internet is weak right now, but know that I love you! ❤️ (Error loading)";
+      });
+}
+
+// FUNCTION: Save Letter (Admin Only)
+function saveLetter() {
+    const text = document.getElementById("adminText").value;
+    const status = document.getElementById("status");
+
+    if (!text) return;
+
+    status.innerText = "Saving...";
+
+    db.collection("letters").add({
+        text: text,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+        status.innerText = "Saved successfully! Refresh to write another.";
+        document.getElementById("adminText").value = "";
+    })
+    .catch((error) => {
+        status.innerText = "Error: " + error.message;
     });
 }
 </script>
