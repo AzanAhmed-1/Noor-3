@@ -37,7 +37,7 @@ body {
     border-radius: 20px;
     cursor: pointer;
     font-size: 14px;
-    z-index: 10001; /* Above everything */
+    z-index: 10001;
     font-weight: bold;
 }
 
@@ -54,8 +54,8 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    transition: opacity 1s ease;
     cursor: pointer;
+    transition: opacity 1s ease;
 }
 
 #intro-heart { font-size: 80px; animation: heartbeat 1.5s infinite; }
@@ -69,39 +69,122 @@ body {
     60% { transform: scale(1); }
 }
 
-/* ADMIN & ENVELOPE STYLES */
+/* ADMIN PANEL */
 #admin {
     background: white; padding: 20px; border-radius: 10px; width: 90%; max-width: 500px;
     margin-bottom: 20px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); z-index: 1000;
 }
 textarea { width: 100%; height: 120px; margin-top: 10px; padding: 10px; }
-button { background: #ff5e7e; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 10px; }
+button { background: #ff5e7e; color: white; border: none; padding: 10px 20px; border-radius: 20px; margin-top: 10px; cursor: pointer; }
 
-.envelope {
-    width: 100%; max-width: 320px; height: 200px; background: white;
-    margin-top: 80px; border-radius: 10px; position: relative;
-    cursor: pointer; box-shadow: 0 15px 30px rgba(0,0,0,0.3);
+/* 📬 MAILBOX GRID CONTAINER */
+#mailbox {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 30px;
+    width: 100%;
+    max-width: 1000px;
+    padding-top: 50px;
+}
+
+/* ✉️ INDIVIDUAL MINI ENVELOPES */
+.mini-envelope {
+    width: 240px;
+    height: 160px;
+    background: white;
+    border-radius: 8px;
+    position: relative;
+    cursor: pointer;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
     transition: transform 0.3s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
-.envelope:hover { transform: scale(1.05); }
-.stamp {
-    position: absolute; top: 15px; right: 15px; border: 2px dashed #ff5e7e;
-    padding: 5px 10px; font-size: 12px; color: #ff5e7e; font-weight: bold; transform: rotate(15deg);
-}
-.click-hint { margin-top: 20px; color: white; font-size: 14px; opacity: 0.8; animation: bounce 2s infinite; }
+.mini-envelope:hover { transform: translateY(-10px); }
 
-.letter-container {
-    background: white; padding: 30px; border-radius: 14px; max-width: 600px;
-    margin-top: 40px; text-align: left; box-shadow: 0 18px 40px rgba(0,0,0,0.35);
-    line-height: 1.8; color: #333; width: 90%; margin-bottom: 40px;
+/* The Flap triangle effect */
+.mini-envelope::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    border-left: 120px solid transparent;
+    border-right: 120px solid transparent;
+    border-top: 80px solid #f0f0f0;
 }
-h2 { text-align: center; color: #ff5e7e; margin-top: 0; margin-bottom: 30px; }
-.letter-entry { border-bottom: 2px dashed #ffcad4; padding-bottom: 20px; margin-bottom: 30px; }
-.letter-entry:last-child { border-bottom: none; margin-bottom: 0; }
-.letter-text { white-space: pre-wrap; }
-.signature { margin-top: 20px; text-align: right; font-style: italic; color: #777; font-size: 0.9em; }
 
-@keyframes bounce { 0%, 100% {transform: translateY(0);} 50% {transform: translateY(-5px);} }
+.envelope-date {
+    position: absolute;
+    bottom: 15px;
+    font-size: 14px;
+    color: #ff5e7e;
+    font-weight: bold;
+    border: 1px dashed #ff5e7e;
+    padding: 4px 8px;
+    background: #fff;
+    z-index: 2;
+}
+
+/* 📖 READING MODAL (The Open Letter) */
+#reading-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    z-index: 10000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s;
+}
+#reading-modal.active {
+    opacity: 1;
+    pointer-events: all;
+}
+
+.paper {
+    background: white;
+    width: 90%;
+    max-width: 600px;
+    max-height: 80vh;
+    padding: 40px;
+    border-radius: 5px;
+    box-shadow: 0 0 50px rgba(0,0,0,0.5);
+    overflow-y: auto;
+    text-align: left;
+    position: relative;
+}
+
+.close-btn {
+    position: absolute;
+    top: 15px;
+    right: 20px;
+    font-size: 30px;
+    cursor: pointer;
+    color: #aaa;
+}
+.close-btn:hover { color: #ff5e7e; }
+
+.letter-content {
+    white-space: pre-wrap;
+    line-height: 1.8;
+    color: #333;
+    font-size: 16px;
+}
+
+.letter-signature {
+    margin-top: 30px;
+    text-align: right;
+    font-style: italic;
+    color: #666;
+}
+
 </style>
 </head>
 
@@ -110,28 +193,31 @@ h2 { text-align: center; color: #ff5e7e; margin-top: 0; margin-bottom: 30px; }
 <audio id="bgMusic" loop>
     <source src="dekha_hi_nahi.mp3" type="audio/mpeg">
 </audio>
-
 <button class="music-btn" onclick="toggleMusic()">🎵 Play Music</button>
 
 <div id="intro-overlay" onclick="startExperience()">
     <div id="intro-heart">❤️</div>
-    <div id="intro-text">Tap to enter</div>
+    <div id="intro-text">Tap to enter your mailbox</div>
 </div>
 
 <div id="admin" class="hidden">
     <h3>💌 Write a New Letter</h3>
     <textarea id="adminText" placeholder="Write here..."></textarea><br>
-    <button onclick="saveLetter()">Save</button>
+    <button onclick="saveLetter()">Save Letter</button>
     <p id="status" style="font-size:12px; color:gray;"></p>
 </div>
 
-<div id="main-content" class="hidden" style="width:100%; display:flex; flex-direction:column; align-items:center;">
-    <div class="envelope" id="envelope" onclick="openLetter()">
-        <div class="stamp">For You</div>
-    </div>
-    <div class="click-hint" id="hint">Tap to open</div>
+<h2 id="mailbox-title" class="hidden" style="color:white; text-shadow: 1px 1px 5px rgba(0,0,0,0.2);">Your Letters ❤️</h2>
+<div id="mailbox" class="hidden">
+    <p style="color:white;">Loading your letters...</p>
+</div>
 
-    <div class="letter-container hidden" id="letterView"></div>
+<div id="reading-modal">
+    <div class="paper">
+        <span class="close-btn" onclick="closeLetter()">&times;</span>
+        <div id="modal-text" class="letter-content"></div>
+        <div id="modal-date" class="letter-signature"></div>
+    </div>
 </div>
 
 <script>
@@ -148,70 +234,85 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
-// 2. MUSIC CONTROL
+// 2. MUSIC & START
 function toggleMusic() {
     const music = document.getElementById("bgMusic");
-    if (music.paused) {
-        music.play().then(() => {
-            console.log("Music playing");
-        }).catch(e => {
-            alert("Music file not found or blocked. Check file name 'dekha_hi_nahi.mp3'");
-        });
-    } else {
-        music.pause();
-    }
+    if (music.paused) music.play().catch(e=>alert("Check file name: dekha_hi_nahi.mp3"));
+    else music.pause();
 }
 
-// 3. START EXPERIENCE
 function startExperience() {
     const overlay = document.getElementById("intro-overlay");
-    const mainContent = document.getElementById("main-content");
-
-    // Try to play music
-    toggleMusic();
-
-    // Fade out overlay
+    toggleMusic(); // Try to play
     overlay.style.opacity = "0";
     setTimeout(() => {
         overlay.style.display = "none";
-        mainContent.classList.remove("hidden");
+        document.getElementById("mailbox").classList.remove("hidden");
+        document.getElementById("mailbox-title").classList.remove("hidden");
+        loadEnvelopes(); // Load data after animation
     }, 1000);
 }
 
-// 4. ADMIN CHECK
+// 3. ADMIN CHECK
 window.onload = function() {
     if (window.location.hash === "#admin") {
         document.getElementById("intro-overlay").style.display = "none";
         document.getElementById("admin").classList.remove("hidden");
+        document.getElementById("mailbox").classList.remove("hidden");
+        loadEnvelopes();
     }
 };
 
-// 5. FETCH LETTERS
-function openLetter() {
-    document.getElementById("envelope").style.display = "none";
-    document.getElementById("hint").style.display = "none";
-    const letterView = document.getElementById("letterView");
-    letterView.classList.remove("hidden");
-
-    letterView.innerHTML = "<h2>For Noor-UL-Ain ❤️</h2><p style='text-align:center'>Loading memories...</p>";
-
+// 4. LOAD ENVELOPES (THE MAILBOX LOGIC)
+function loadEnvelopes() {
+    const mailbox = document.getElementById("mailbox");
+    
     db.collection("letters").orderBy("timestamp", "desc").get()
     .then((snap) => {
-        letterView.innerHTML = "<h2>For Noor-UL-Ain ❤️</h2>";
-        if(!snap.empty) {
+        mailbox.innerHTML = ""; // Clear loading text
+        if (!snap.empty) {
             snap.forEach(doc => {
                 const data = doc.data();
-                const d = data.timestamp ? data.timestamp.toDate().toLocaleDateString() : "";
-                letterView.innerHTML += `
-                <div class="letter-entry">
-                    <div class="letter-text">${data.text}</div>
-                    <div class="signature">— Azan Ahmed<br><span>${d}</span></div>
-                </div>`;
+                createEnvelopeElement(data);
             });
         } else {
-            letterView.innerHTML += "<p>No letters yet ❤️</p>";
+            mailbox.innerHTML = "<p style='color:white'>No letters yet. ❤️</p>";
         }
     });
+}
+
+// Helper: Create HTML for one envelope
+function createEnvelopeElement(data) {
+    const mailbox = document.getElementById("mailbox");
+    
+    // Format Date
+    let dateStr = "Unknown Date";
+    if (data.timestamp) {
+        dateStr = data.timestamp.toDate().toLocaleDateString("en-US", {
+            month: 'short', day: 'numeric', year: 'numeric'
+        });
+    }
+
+    // Create Div
+    const env = document.createElement("div");
+    env.className = "mini-envelope";
+    env.innerHTML = `<div class="envelope-date">${dateStr}</div>`;
+    
+    // Click to Open
+    env.onclick = () => openLetterInModal(data.text, dateStr);
+    
+    mailbox.appendChild(env);
+}
+
+// 5. OPEN & CLOSE MODAL
+function openLetterInModal(text, date) {
+    document.getElementById("modal-text").innerText = text;
+    document.getElementById("modal-date").innerHTML = `— Azan Ahmed<br>${date}`;
+    document.getElementById("reading-modal").classList.add("active");
+}
+
+function closeLetter() {
+    document.getElementById("reading-modal").classList.remove("active");
 }
 
 // 6. SAVE LETTER
@@ -224,6 +325,7 @@ function saveLetter() {
     }).then(() => {
         document.getElementById("status").innerText = "Saved!";
         document.getElementById("adminText").value = "";
+        loadEnvelopes(); // Refresh the grid
     });
 }
 </script>
